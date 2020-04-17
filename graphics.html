@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    
+    <!-- Below javascript defines the interaction of this HTML page to wasm -->
     <script type="module">
+      
+      // Loads wasm binary file
       async function init() {
         const { instance } = await WebAssembly.instantiateStreaming(
           fetch("./wasm_example_bg.wasm")
@@ -10,7 +14,10 @@
         const width = 300;
         const height = 300;
 
+        // Fetches buffer that wasm writes images to
         const buffer_address = instance.exports.BUFFER.value;
+        
+        // Wraps buffer with image object
         const image = new ImageData(
             new Uint8ClampedArray(
                 instance.exports.memory.buffer,
@@ -20,31 +27,48 @@
             width,
         );
 
+        // Retrieves canvas 1 defined in below HTML
         const canvas_one = document.getElementById("demo-canvas_one");
         canvas_one.width = width;
         canvas_one.height = height;
+        
+        // Fetches 2 dimensional context from defined canvas 1
         const ctx_one = canvas_one.getContext("2d");
 
+        // Retrieves canvas 2 defined in below HTML
         const canvas_two = document.getElementById("demo-canvas_two");
         canvas_two.width = width;
         canvas_two.height = height;
+        
+        // Fetches 2 dimensional context from defined canvas 2
         const ctx_two = canvas_two.getContext("2d");
 
+        // Primary animation loop
         const render = () => {
+          
+          // Calls wasm render 1 animation that writes to shared buffer
           instance.exports.render_one();
           ctx_one.putImageData( image, 0, 0 );
+          
+           // Calls wasm render 2 animation that writes to shared buffer
           instance.exports.render_two();
           ctx_two.putImageData( image, 0, 0 );
+          
+          //Primary callback loop to facilitate animation
           requestAnimationFrame( render );
         };
-
+        
+        // Initiates primary callback loop
         render();
       }
 
+      // Initiates aboved defined execution sequence
       init();
     </script>
   </head>
   <body>
+    
+    <!-- Defines canvas objects that will be written to -->
     <canvas id="demo-canvas_one"></canvas>
     <canvas id="demo-canvas_two"></canvas>
   </body>
